@@ -42,8 +42,9 @@ Panel {
 
         onViewpointsChanged: {
             // The model has been updated, but the GridView is yet to be filled with the new data: reset the grid index
-            if (grid.count == 0 && grid.count != viewpoints.count)
+            if (grid.count == 0 && grid.count != viewpoints.count) {
                 grid.currentIndex = -1;
+            }
         }
     }
 
@@ -168,10 +169,14 @@ Panel {
             }
 
             onCountChanged: {
-                /* If the grid index is -1, then it has been reset when the model was updated and the grid emptied
-                   Set it to 0 to select the first element now that it is filled */
                 if (grid.currentIndex == -1 && grid.count > 0) {
+                    /* If the grid index is -1, then it has been reset when the model was updated and the grid emptied
+                       Set it to 0 to select the first element now that it is filled */
                     grid.currentIndex = 0
+                } else {
+                    /* The count is updated but the current index is valid: an image has been added or removed. The
+                       index remains unchanged, but the selected image has changed. */
+                    grid.currentIndexChanged()
                 }
             }
 
