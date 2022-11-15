@@ -39,6 +39,12 @@ Panel {
         property variant viewpoints: currentCameraInit ? currentCameraInit.attribute('viewpoints').value : undefined
         property variant intrinsics: currentCameraInit ? currentCameraInit.attribute('intrinsics').value : undefined
         property bool readOnly: root.readOnly || displayHDR.checked
+
+        onViewpointsChanged: {
+            // The model has been updated, but the GridView is yet to be filled with the new data: reset the grid index
+            if (grid.count == 0 && grid.count != viewpoints.count)
+                grid.currentIndex = -1;
+        }
     }
 
     property variant parsedIntrinsic
@@ -161,6 +167,14 @@ Panel {
                 visible: !intrinsicsFilterButton.checked
             }
 
+            onCountChanged: {
+                /* If the grid index is -1, then it has been reset when the model was updated and the grid emptied
+                   Set it to 0 to select the first element now that it is filled */
+                if (grid.currentIndex == -1 && grid.count > 0) {
+                    grid.currentIndex = 0
+                }
+            }
+
             focus: true
             clip: true
             cellWidth: thumbnailSizeSlider.value
@@ -173,7 +187,9 @@ Panel {
             Connections {
                 target: _reconstruction
                 onSelectedViewIdChanged: {
-                    grid.updateCurrentIndexFromSelectionViewId()
+                    if (_reconstruction.selectedViewId > -1) {
+                        grid.updateCurrentIndexFromSelectionViewId()
+                    }
                 }
             }
             function makeCurrentItemVisible()
@@ -183,12 +199,12 @@ Panel {
             function updateCurrentIndexFromSelectionViewId()
             {
                 var idx = grid.model.find(_reconstruction.selectedViewId, "viewId")
-                if(idx >= 0 && grid.currentIndex != idx) {
+                if (idx >= 0 && grid.currentIndex != idx) {
                     grid.currentIndex = idx
                 }
             }
             onCurrentIndexChanged: {
-                if(grid.updateSelectedViewFromGrid) {
+                if (grid.updateSelectedViewFromGrid && grid.currentItem) {
                     _reconstruction.selectedViewId = grid.currentItem.viewpoint.get("viewId").value
                 }
             }
